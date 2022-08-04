@@ -46,6 +46,9 @@ void pippenger(const affine_t* points, size_t npoints,
                bucket_t (*buckets)[NWINS][1<<WBITS],
                bucket_t (*ret)[NWINS][NTHREADS][2] = nullptr);
 
+__global__ void op_scalar_mul_sppark(scalar_t *scalar_ptr, uint64_t loop_times);
+__global__ void op_point_mixed_add_sppark(affine_t *point_ptr, uint64_t loop_times, bucket_t *out);
+
 #ifdef __CUDA_ARCH__
 
 #include <cooperative_groups.h>
@@ -123,6 +126,30 @@ static __device__ int get_wval(const scalar_t& d, uint32_t off, uint32_t bits)
     return (int)(ret >> (off%32)) & ((1<<bits) - 1);
 }
 #endif
+
+
+__global__ void op_scalar_mul_sppark(scalar_t *scalar_ptr, uint64_t loop_times) {
+    scalar_t tmp1 = scalar_ptr[0];
+    scalar_t tmp2;
+
+    uint64_t iter_time = loop_times >> 1;
+    for(uint64_t i = 0; i<iter_time; i++){
+        tmp2 = tmp1*tmp1;
+        tmp1 = tmp2*tmp2;
+    }
+
+    scalar_ptr[0] = tmp1;
+}
+
+__global__ void op_point_mixed_add_sppark(affine_t *point_ptr, uint64_t loop_times, bucket_t *out) {
+    bucket_t res;
+    affine_t in;
+    in = point_ptr[0];
+    for(uint64_t i = 0; i<loop_times; i++){
+      res.add(in);
+    }
+    out[0] = res;
+}
 
 __global__
 void pippenger(const affine_t* points, size_t npoints,

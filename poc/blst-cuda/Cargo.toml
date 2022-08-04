@@ -30,6 +30,8 @@ ark-ec = { version = "0.3.0", features = [ "parallel" ] }
 ark-bls12-381 = { version = "0.3.0", optional = true }
 ark-bls12-377 = { version = "0.3.0", optional = true }
 ark-bn254 = { version = "0.3.0", optional = true }
+group = "0.11"
+pairing = { git = 'https://github.com/appliedzkp/pairing', package = "pairing_bn256", tag = "v0.1.1" }
 
 [build-dependencies]
 cc = "^1.0.70"
